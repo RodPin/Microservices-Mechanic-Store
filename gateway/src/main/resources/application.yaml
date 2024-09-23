@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+        - id: maintenance
+          uri: lb://MAINTENANCE-SERVICE
+          filters:
+            - StripPrefix=1
+          predicates:
+            - Path=/maintenance/**
+            
+        - id: mechanic
+          uri: lb://MECHANIC-SERVICE
+          filters:
+            - StripPrefix=1
+          predicates:
+            - Path=/mechanic/**
+
+            
+        - id: review
+          uri: lb://REVIEW-SERVICE
+          filters:
+            - StripPrefix=1
+          predicates:
+            - Path=/review/**
+      metrics:
+        enabled: true
+server:
+  port: 8081
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${random.value}
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  metrics:
+    tags:
+      enabled: true
