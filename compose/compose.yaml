@@ -1,0 +1,76 @@
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.9.11-management-alpine
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - mechanic_network
+    restart: always
+  mongo-server:
+    container_name: mongo-server
+    image: mongo
+    volumes:
+      - ./mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - mechanic_network
+    # depends_on:
+    #   - rabbitmq
+  eureka-server:
+    image: rodpinto/eureka-service
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - mechanic_network
+  maintenance-service:
+    image: rodpinto/maintenance-service
+    ports:
+      - "2222:2222"
+    networks:
+      - mechanic_network
+    depends_on:
+      - eureka-server
+      - mongo-server
+      - rabbitmq
+  mechanic-service:
+    image: rodpinto/mechanic-service
+    ports:
+      - "1111:1111"
+    networks:
+      - mechanic_network
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+    depends_on:
+      - eureka-server
+      - mongo-server
+  review-service:
+    image: rodpinto/review-service
+    ports:
+      - "3333:3333"
+    networks:
+      - mechanic_network
+    depends_on:
+      - eureka-server
+      - mongo-server
+  gateway:
+    image: rodpinto/gateway
+    ports:
+      - "8081:8081"
+    networks:
+      - mechanic_network
+    depends_on:
+      - eureka-server
+      - maintenance-service
+      - mechanic-service
+      - review-service
+networks:
+  mechanic_network:
+    driver: bridge
