@@ -3,6 +3,19 @@ spring:
     name: gateway
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: 
+              - "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - DELETE
+              - PUT
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
       routes:
         - id: maintenance
           uri: lb://MAINTENANCE-SERVICE
@@ -17,7 +30,6 @@ spring:
             - StripPrefix=1
           predicates:
             - Path=/mechanic/**
-
             
         - id: review
           uri: lb://REVIEW-SERVICE
@@ -27,14 +39,17 @@ spring:
             - Path=/review/**
       metrics:
         enabled: true
+
 server:
   port: 8081
+
 eureka:
   instance:
     instance-id: ${spring.application.name}:${random.value}
   client:
     service-url:
       defaultZone: http://eureka-server:8761/eureka
+
 management:
   endpoints:
     web:
